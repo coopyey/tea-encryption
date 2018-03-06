@@ -51,4 +51,8 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+<<<<<<< Updated upstream
+=======
+**/openssl-1.1.1-pre2
+>>>>>>> Stashed changes
 **/libgcrypt-1.8.2
