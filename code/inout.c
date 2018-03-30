@@ -31,3 +31,17 @@ void input_32768(char *in) {
     fgets(in,32769,fp);
     fclose(fp);
 }
+
+void output_64(char *out, char kind) {
+    FILE *fp;
+    
+    if (kind == 'c') {
+        fp = fopen("cipher_64.txt", "w+");
+    } else if (kind == 'p') {
+        fp = fopen("plain_64.txt", "w+");
+    }
+
+    if (fp==NULL) { printf("Null fp\n"); }
+
+
+}

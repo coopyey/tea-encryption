@@ -22,6 +22,8 @@ $(TAR): $(OBJ)
 clean:
 	-rm -f *.o
 	-rm -f $(TAR)
+	-rm -f cipher_*.txt
+	-rm -f plain_*.txt
 
 rebuild: clean all
 
