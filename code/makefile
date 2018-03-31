@@ -1,7 +1,13 @@
 CC=gcc
-CFLAGS=-g -Wall
-LIBS=
+CFLAGS=-g -Wall -std=c11
+LIBS=-lssl -lcrypto
 TAR=prog
+
+OUT=output
+CBC=output/cbc
+OFB=output/ofb
+PLAIN=*_plain_*.txt
+CIPHER=*_cipher_*.txt
 
 .PHONY: default all clean
 
@@ -17,15 +23,15 @@ HEADERS=$(wildcard *.h)
 .PRECIOUS: $(TAR) $(OBJ)
 
 $(TAR): $(OBJ)
-	$(CC) $(OBJ) -Wall $(LIBS) -o $@
+	$(CC) $(OBJ) -Wall -o $(OUT)/$@ $(LIBS)
 
 clean:
 	-rm -f *.o
-	-rm -f $(TAR)
-	-rm -f cipher_*.txt
-	-rm -f plain_*.txt
+	-rm -f $(OUT)/$(TAR)
+	-rm -f $(CBC)/$(CIPHER) $(CBC)/$(PLAIN) $(OFB)/$(CIPHER) $(OFB)/$(PLAIN)
 
 rebuild: clean all
 
 cleanobj:
 	-rm -f *.o
+	-rm -f $(CBC)/$(CIPHER) $(CBC)/$(PLAIN) $(OFB)/$(CIPHER) $(OFB)/$(PLAIN)

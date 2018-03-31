@@ -2,6 +2,7 @@
 #define _CRYPTO_H_
 
 #include <openssl/des.h>
+#include <openssl/rand.h>
 #include "inout.h"
 
 //Encryptions
