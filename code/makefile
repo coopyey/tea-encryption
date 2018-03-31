@@ -6,8 +6,8 @@ TAR=prog
 OUT=output
 CBC=output/cbc
 OFB=output/ofb
-PLAIN=*_plain_*.txt
-CIPHER=*_cipher_*.txt
+PLAIN=*_p_*.txt
+CIPHER=*_c_*.txt
 
 .PHONY: default all clean
 

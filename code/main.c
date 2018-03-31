@@ -1,4 +1,3 @@
-#include "inout.h"
 #include "crypto.h"
 
 int main() {
