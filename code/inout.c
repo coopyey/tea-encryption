@@ -73,16 +73,15 @@ void output_512(char *out, char kind, char pass) {
         fp = fopen("ofb/des_c_512.txt", "w");
     } else if ((kind == 'p') && (pass == '1')) {
         fp = fopen("ofb/des_p_512.txt", "w");
-    } /* else if ((kind == 'c') && (pass == '2')) {
-        fp = fopen("cbc_c_512.txt", "w");
+    } else if ((kind == 'c') && (pass == '2')) {
+        fp = fopen("cbc/tea_c_512.txt", "w");
     } else if ((kind == 'p') && (pass == '2')) {
-        fp = fopen("cbc_p_512.txt", "w");
+        fp = fopen("cbc/tea_p_512.txt", "w");
     } else if ((kind == 'c') && (pass == '3')) {
-        fp = fopen("ofb_c_512.txt", "w");
+        fp = fopen("ofb/tea_c_512.txt", "w");
     } else if ((kind == 'p') && (pass == '3')) {
-        fp = fopen("ofb_p_512.txt", "w");
+        fp = fopen("ofb/tea_p_512.txt", "w");
     } 
-    */
 
     if (fp==NULL) { printf("Null fp: file couldn't be created\n"); }
 

@@ -182,9 +182,23 @@ void tea_cbc_mode(char *in) {
           pos++;
           itr++;
         }
+
+        int j;
+        for (j=0; j<64; j++) {
+          cur_block[j] ^= ivec[j];
+         }
+
+      tea_encrypt((uint32_t*)cur_block,(uint32_t*)returned,(uint32_t*)key);
+      strcpy(ivec,returned);
+      strcat(ctext,returned);
     } //end if/else
   }//end for i
-  output_64(ctext,'c','2');
+
+  if((length-1)==64) {
+    output_64(ctext,'c','2');
+  } else if ((length-1)==512) {
+    output_512(ctext,'c','2');
+  }
 
   memset(cur_block, 0 ,sizeof(cur_block));
   memset(returned, 0 ,sizeof(returned));
@@ -209,7 +223,6 @@ void tea_cbc_mode(char *in) {
 
       strcpy(ivec,returned);
       strcpy(ptext,returned);
-
       printf("Plain text: %s\nNew IVEC: %s\nPtext Contents: %s\n\n",returned,ivec,ptext);
     } else {
       printf("Round: %d\nLogic: (round)64+1->(round+1)64\n",i);
@@ -220,8 +233,22 @@ void tea_cbc_mode(char *in) {
           pos++;
           itr++;
         }
+        tea_decrypt((uint32_t*)cur_block,(uint32_t*)returned,(uint32_t*)key);
+
+        int h;
+        for(h=0; h<64; h++) {
+          returned[h] ^= ivec[h];
+        }
+
+        strcpy(ivec,returned);
+        strcat(ptext,returned);
     } //end if/else
   }//end for i
-  output_64(ptext,'p','2');
+
+  if((length-1)==64) {
+    output_64(ptext,'p','2');
+  } else if ((length-1)==512) {
+    output_512(ptext,'p','2');
+  }
 
 }

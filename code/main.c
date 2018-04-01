@@ -26,7 +26,7 @@ int main() {
     printf("DES OFB en/decryption done. Find files in ofb folder.\n\n");
 
     tea_cbc_mode(in_64);
-    //tea_cbc_mode(in_512);
+    tea_cbc_mode(in_512);
 
     return 0;
 }
