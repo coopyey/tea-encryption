@@ -3,7 +3,14 @@
 
 #include <openssl/des.h>
 #include <openssl/rand.h>
+#include <time.h>
+#include <sys/time.h>
 #include "inout.h"
+
+typedef struct {
+    long tv_sec;
+    long tv_usec;
+} timeval;
 
 //Encryptions
 void tea_encrypt(unsigned long *const v,unsigned long *const w,const unsigned long *const k);

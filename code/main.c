@@ -15,11 +15,13 @@ int main() {
     des_cbc(in_512);
     des_cbc(in_4096);
     //des_cbc(in_32768);
+    printf("DES CBC en/decryption done. Find files in output/cbc.\n\n");
 
     des_ofb(in_64);
     des_ofb(in_512);
     des_ofb(in_4096);
     //des_ofb(in_32768);
+    printf("DES OFB en/decryption done. Find files in output/ofb.\n\n");
 
     return 0;
 }
