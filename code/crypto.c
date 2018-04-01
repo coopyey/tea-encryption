@@ -30,7 +30,7 @@ void tea_decrypt(unsigned long *const v,unsigned long *const w,const unsigned lo
 }
 
 void des_cbc(char *in) {
-  int length = strlen(in)*3;
+  int length = strlen(in)+1;
   unsigned char out[length], back[length];
   struct timeval start;
   struct timeval end;
@@ -54,22 +54,22 @@ void des_cbc(char *in) {
   gettimeofday(&start,NULL);
   DES_ncbc_encrypt((unsigned char *)in, out, length, &keysched, &ivec, DES_ENCRYPT);
   gettimeofday(&end,NULL);
-  printf("%d CBC DES encrypt took %li useconds.\n",length/3,(end.tv_usec-start.tv_usec));
+  printf("%d CBC DES encrypt took %li useconds.\n",length-1,(end.tv_usec-start.tv_usec));
 
 
   memcpy(ivec, ivsetup, sizeof(ivsetup));
   gettimeofday(&start,NULL);
   DES_ncbc_encrypt(out, back, length, &keysched, &ivec, DES_DECRYPT);
   gettimeofday(&end,NULL);
-  printf("%d CBC DES decrypt took %li useconds.\n",length/3,(end.tv_usec-start.tv_usec));
+  printf("%d CBC DES decrypt took %li useconds.\n",length-1,(end.tv_usec-start.tv_usec));
 
-  if((length/3)==64) {
+  if((length-1)==64) {
     output_64((char*)out,'c','0');
     output_64((char*)back,'p','0');
-  } else if ((length/3)==512) {
+  } else if ((length-1)==512) {
     output_512((char*)out,'c','0');
     output_512((char*)back,'p','0');
-  } else if ((length/3)==4096) {
+  } else if ((length-1)==4096) {
     output_4096((char*)out,'c','0');
     output_4096((char*)back,'p','0');
   } /*else if ((length/3)==32768) {
@@ -80,7 +80,7 @@ void des_cbc(char *in) {
 }
 
 void des_ofb(char *in) {
-  int length = strlen(in)*3;
+  int length = strlen(in)+1;
   unsigned char out[length], back[length];
   struct timeval start;
   struct timeval end;
@@ -104,21 +104,21 @@ void des_ofb(char *in) {
   gettimeofday(&start,NULL);
   DES_ofb_encrypt((unsigned char*)in, out, 8, length, &keysched, &ivec);
   gettimeofday(&end,NULL);
-  printf("%d OFB DES encrypt took %li useconds.\n",length/3,(end.tv_usec-start.tv_usec));
+  printf("%d OFB DES encrypt took %li useconds.\n",length-1,(end.tv_usec-start.tv_usec));
 
   memcpy(ivec, ivsetup, sizeof(ivsetup));
   gettimeofday(&start,NULL);
   DES_ofb_encrypt(out, back, 8, length, &keysched, &ivec);
   gettimeofday(&end,NULL);
-  printf("%d OFB DES decrypt took %li useconds.\n",length/3,(end.tv_usec-start.tv_usec));
+  printf("%d OFB DES decrypt took %li useconds.\n",length-1,(end.tv_usec-start.tv_usec));
 
-  if((length/3)==64) {
+  if((length-1)==64) {
     output_64((char*)out,'c','1');
     output_64((char*)back,'p','1');
-  } else if ((length/3)==512) {
+  } else if ((length-1)==512) {
     output_512((char*)out,'c','1');
     output_512((char*)back,'p','1');
-  } else if ((length/3)==4096) {
+  } else if ((length-1)==4096) {
     output_4096((char*)out,'c','1');
     output_4096((char*)back,'p','1');
   } /*else if ((length/3)==32768) {
