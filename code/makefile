@@ -3,9 +3,8 @@ CFLAGS=-g -Wall -std=c11
 LIBS=-lssl -lcrypto
 TAR=prog
 
-OUT=output
-CBC=output/cbc
-OFB=output/ofb
+CBC=cbc
+OFB=ofb
 PLAIN=*_p_*.txt
 CIPHER=*_c_*.txt
 
@@ -23,11 +22,11 @@ HEADERS=$(wildcard *.h)
 .PRECIOUS: $(TAR) $(OBJ)
 
 $(TAR): $(OBJ)
-	$(CC) $(OBJ) -Wall -o $(OUT)/$@ $(LIBS)
+	$(CC) $(OBJ) -Wall -o $@ $(LIBS)
 
 clean:
 	-rm -f *.o
-	-rm -f $(OUT)/$(TAR)
+	-rm -f $(TAR)
 	-rm -f $(CBC)/$(CIPHER) $(CBC)/$(PLAIN) $(OFB)/$(CIPHER) $(OFB)/$(PLAIN)
 
 rebuild: clean all

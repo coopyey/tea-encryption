@@ -5,6 +5,7 @@
 #include <openssl/rand.h>
 #include <time.h>
 #include <sys/time.h>
+#include <stdint.h>
 #include "inout.h"
 
 typedef struct {
@@ -12,18 +13,13 @@ typedef struct {
     long tv_usec;
 } timeval;
 
-//Encryptions
-void tea_encrypt(unsigned long *const v,unsigned long *const w,const unsigned long *const k);
-//cbc_encrypt();
-//ofb_encrypt();
+void tea_encrypt(uint32_t *const v,uint32_t *const w,const uint32_t *const k);
+void tea_decrypt(uint32_t *const v,uint32_t *const w,const uint32_t *const k);
 
-//Decryptions
-void tea_decrypt(unsigned long *const v,unsigned long *const w,const unsigned long *const k);
-//cbc_decrypt();
-//ofb_decrypt();
+void tea_cbc_mode(char *in);
+void tea_ofb_mode(char *in);
+char *rand_stream(size_t num);
 
-
-//DES library stuff
 void des_cbc(char *in);
 void des_ofb(char *in);
 

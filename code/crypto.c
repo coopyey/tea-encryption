@@ -1,7 +1,17 @@
 #include "crypto.h"
 
-void tea_encrypt(unsigned long *const v,unsigned long *const w,const unsigned long *const k) {
-   register unsigned long y=v[0],z=v[1],sum=0,delta=0x9E3779B9,a=k[0],b=k[1],c=k[2],d=k[3],n=32;
+char *rand_stream(size_t num) {
+  char *stream = malloc(num);
+  size_t i;
+
+  for (i=0; i<num; i++) {
+    stream[i] = rand();
+  }
+  return stream;
+}
+
+void tea_encrypt(uint32_t *const v,uint32_t *const w,const uint32_t *const k) {
+   register uint32_t y=v[0],z=v[1],sum=0,delta=0x9E3779B9,a=k[0],b=k[1],c=k[2],d=k[3],n=32;
 
    while(n-->0)
       {
@@ -9,13 +19,12 @@ void tea_encrypt(unsigned long *const v,unsigned long *const w,const unsigned lo
         y += ((z << 4)+a) ^ (z+sum) ^ ((z >> 5)+b);
         z += ((y << 4)+c) ^ (y+sum) ^ ((y >> 5)+d);
       }
-
    w[0]=y; w[1]=z;
 }
 
-void tea_decrypt(unsigned long *const v,unsigned long *const w,const unsigned long *const k)
+void tea_decrypt(uint32_t *const v,uint32_t *const w,const uint32_t *const k)
 {
-   register unsigned long y=v[0],z=v[1],sum=0xC6EF3720,delta=0x9E3779B9,a=k[0],b=k[1],c=k[2],d=k[3],n=32;
+   register uint32_t y=v[0],z=v[1],sum=0xC6EF3720,delta=0x9E3779B9,a=k[0],b=k[1],c=k[2],d=k[3],n=32;
 
    /* sum = delta<<5, in general sum = delta * n */
 
@@ -25,7 +34,6 @@ void tea_decrypt(unsigned long *const v,unsigned long *const w,const unsigned lo
         y -= ((z << 4)+a) ^ (z+sum) ^ ((z >> 5)+b);
         sum -= delta;
       }
-   
    w[0]=y; w[1]=z;
 }
 
@@ -72,11 +80,10 @@ void des_cbc(char *in) {
   } else if ((length-1)==4096) {
     output_4096((char*)out,'c','0');
     output_4096((char*)back,'p','0');
-  } /*else if ((length/3)==32768) {
-    output_32768(out,'c','0');
-    output_32768(back,'p','0');
-    printf("32768 DES CBC files in output folder.\n");
-  }*/
+  } else if ((length-1)==32768) {
+    output_32768((char*)out,'c','0');
+    output_32768((char*)back,'p','0');
+  }
 }
 
 void des_ofb(char *in) {
@@ -121,9 +128,100 @@ void des_ofb(char *in) {
   } else if ((length-1)==4096) {
     output_4096((char*)out,'c','1');
     output_4096((char*)back,'p','1');
-  } /*else if ((length/3)==32768) {
-    output_32768(out,'c','0');
-    output_32768(back,'p','0');
-    printf("32768 DES CBC files in output folder.\n");
-  }*/
+  } else if ((length-1)==32768) {
+    output_32768((char*)out,'c','0');
+    output_32768((char*)back,'p','0');
+  }
+}
+
+void tea_cbc_mode(char *in) {
+  int length = strlen(in)+1;
+  int rounds = length/64;
+
+  int i;
+  char key[129], ivsetup[65], ivec[65], cur_block[65], returned[65];
+  char ctext[length], ptext[length], temp[length];
+
+  strcpy(key,rand_stream(128));
+  strcpy(ivsetup,rand_stream(64));
+  strcpy(temp,in);
+  printf("In: %s\nTemp: %s\n\n",in,temp);
+
+  memset(ctext, 0, sizeof(ctext));
+  memset(ptext, 0 ,sizeof(ptext));
+  memset(cur_block, 0 ,sizeof(cur_block));
+  memset(returned, 0 ,sizeof(returned));
+  memcpy(ivec, ivsetup, sizeof(ivsetup));
+
+  //encrypt
+  for (i=0; i<rounds; i++) {
+    if(i==0) {
+      strncpy(cur_block,temp,64);
+      printf("Current block: %s\n",cur_block);
+
+      int j;
+      for (j=0; j<64; j++) {
+        cur_block[j] ^= ivec[j];
+      }
+
+      printf("XOR Block: %s\n",cur_block);
+      
+      tea_encrypt((uint32_t*)cur_block,(uint32_t*)returned,(uint32_t*)key);
+
+      printf("Cipher Block: %s\n",returned);
+
+      strcpy(ivec,returned);
+      strcpy(ctext,returned);
+      printf("New IVEC: %s\nCtext contents: %s\n\n",ivec,ctext);
+    } else {
+      printf("Round: %d\nLogic: (round)64+1->(round+1)64\n",i);
+        int pos=(i*64)+1; //set to start pos
+        int itr = 0;
+        while (itr<64) {
+          cur_block[itr] = temp[pos];
+          pos++;
+          itr++;
+        }
+    } //end if/else
+  }//end for i
+  output_64(ctext,'c','2');
+
+  memset(cur_block, 0 ,sizeof(cur_block));
+  memset(returned, 0 ,sizeof(returned));
+  memcpy(ivec, ivsetup, sizeof(ivsetup));
+
+  //decrypt
+  for (i=0; i<rounds; i++) {
+    if(i==0) {
+      strcpy(temp,ctext);
+      strncpy(cur_block,temp,64);
+
+      printf("Current Block: %s\n",cur_block);
+
+      tea_decrypt((uint32_t*)cur_block,(uint32_t*)returned,(uint32_t*)key);
+
+      printf("After Decrypt: %s\n",returned);
+
+      int h;
+      for (h=0; h<64; h++) {
+        returned[h] ^= ivec[h];
+      }
+
+      strcpy(ivec,returned);
+      strcpy(ptext,returned);
+
+      printf("Plain text: %s\nNew IVEC: %s\nPtext Contents: %s\n\n",returned,ivec,ptext);
+    } else {
+      printf("Round: %d\nLogic: (round)64+1->(round+1)64\n",i);
+        int pos=(i*64)+1; //set to start pos
+        int itr = 0;
+        while (itr<64) {
+          cur_block[itr] = temp[pos];
+          pos++;
+          itr++;
+        }
+    } //end if/else
+  }//end for i
+  output_64(ptext,'p','2');
+
 }
