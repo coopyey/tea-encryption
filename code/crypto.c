@@ -136,63 +136,64 @@ void des_ofb(char *in) {
 
 void tea_cbc_mode(char *in) {
   int length = strlen(in)+1;
-  int rounds = length/64;
-
+  int rounds = length/8;
   int i;
-  char key[129], ivsetup[65], ivec[65], cur_block[65], returned[65];
+  char key[16], ivsetup[8], ivec[8], cur_block[8], returned[8];
   char ctext[length], ptext[length], temp[length];
-
-  strcpy(key,rand_stream(128));
-  strcpy(ivsetup,rand_stream(64));
-  strcpy(temp,in);
-  printf("In: %s\nTemp: %s\n\n",in,temp);
+  struct timeval start;
+  struct timeval end;
 
   memset(ctext, 0, sizeof(ctext));
   memset(ptext, 0 ,sizeof(ptext));
   memset(cur_block, 0 ,sizeof(cur_block));
   memset(returned, 0 ,sizeof(returned));
-  memcpy(ivec, ivsetup, sizeof(ivsetup));
+  memset(key, 0, sizeof(key));
+  memset(ivsetup, 0, sizeof(ivsetup));
+  memset(temp, 0, sizeof(temp));
+  memset(ivec, 0, sizeof(ivec));
+
+  memcpy(key,rand_stream(16),16);
+  memcpy(ivsetup,rand_stream(8),8);
+  strcpy(temp,in);
+  memcpy(ivec, ivsetup, 8);
 
   //encrypt
+  gettimeofday(&start,NULL);
   for (i=0; i<rounds; i++) {
     if(i==0) {
-      strncpy(cur_block,temp,64);
-      printf("Current block: %s\n",cur_block);
+      memcpy(cur_block,temp,8);
 
       int j;
-      for (j=0; j<64; j++) {
+      for (j=0; j<8; j++) {
         cur_block[j] ^= ivec[j];
       }
-
-      printf("XOR Block: %s\n",cur_block);
-      
+     
       tea_encrypt((uint32_t*)cur_block,(uint32_t*)returned,(uint32_t*)key);
 
-      printf("Cipher Block: %s\n",returned);
-
-      strcpy(ivec,returned);
-      strcpy(ctext,returned);
-      printf("New IVEC: %s\nCtext contents: %s\n\n",ivec,ctext);
+      memcpy(ivec,returned,sizeof(returned));
+      memcpy(ctext,returned,sizeof(returned));
     } else {
-      printf("Round: %d\nLogic: (round)64+1->(round+1)64\n",i);
-        int pos=(i*64)+1; //set to start pos
+        int pos=(i*8)+1; //set to start pos
         int itr = 0;
-        while (itr<64) {
+        while (itr<8) {
           cur_block[itr] = temp[pos];
           pos++;
           itr++;
         }
 
         int j;
-        for (j=0; j<64; j++) {
+        for (j=0; j<8; j++) {
           cur_block[j] ^= ivec[j];
          }
 
       tea_encrypt((uint32_t*)cur_block,(uint32_t*)returned,(uint32_t*)key);
-      strcpy(ivec,returned);
-      strcat(ctext,returned);
+
+      memcpy(ivec,returned,8);
+      memcpy(ctext+(i*8),returned,8);
     } //end if/else
   }//end for i
+  gettimeofday(&end,NULL);
+  printf("%d TEA CBC encrypt took %li useconds.\n",length-1,(end.tv_usec-start.tv_usec));
 
   if((length-1)==64) {
     output_64(ctext,'c','2');
@@ -205,50 +206,47 @@ void tea_cbc_mode(char *in) {
   memcpy(ivec, ivsetup, sizeof(ivsetup));
 
   //decrypt
+  gettimeofday(&start,NULL);
   for (i=0; i<rounds; i++) {
     if(i==0) {
-      strcpy(temp,ctext);
-      strncpy(cur_block,temp,64);
-
-      printf("Current Block: %s\n",cur_block);
+      memcpy(temp,ctext,strlen(ctext));
+      memcpy(cur_block,temp,8);
 
       tea_decrypt((uint32_t*)cur_block,(uint32_t*)returned,(uint32_t*)key);
 
-      printf("After Decrypt: %s\n",returned);
-
       int h;
-      for (h=0; h<64; h++) {
+      for (h=0; h<8; h++) {
         returned[h] ^= ivec[h];
       }
 
-      strcpy(ivec,returned);
-      strcpy(ptext,returned);
-      printf("Plain text: %s\nNew IVEC: %s\nPtext Contents: %s\n\n",returned,ivec,ptext);
+      memcpy(ivec,returned,8);
+      memcpy(ptext,returned,8);
     } else {
-      printf("Round: %d\nLogic: (round)64+1->(round+1)64\n",i);
-        int pos=(i*64)+1; //set to start pos
+        int pos=(i*8)+1; //set to start pos
         int itr = 0;
-        while (itr<64) {
+        while (itr<8) {
           cur_block[itr] = temp[pos];
           pos++;
           itr++;
         }
+
         tea_decrypt((uint32_t*)cur_block,(uint32_t*)returned,(uint32_t*)key);
 
         int h;
-        for(h=0; h<64; h++) {
+        for(h=0; h<8; h++) {
           returned[h] ^= ivec[h];
         }
 
-        strcpy(ivec,returned);
-        strcat(ptext,returned);
+        memcpy(ivec,returned,8);
+        memcpy(ptext+(i*8),returned,8);
     } //end if/else
   }//end for i
+  gettimeofday(&end,NULL);
+  printf("%d TEA CBC decrypt took %li useconds.\n",length-1,(end.tv_usec-start.tv_usec));
 
   if((length-1)==64) {
     output_64(ptext,'p','2');
   } else if ((length-1)==512) {
     output_512(ptext,'p','2');
   }
-
 }
