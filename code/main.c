@@ -31,5 +31,11 @@ int main() {
     tea_cbc_mode(in_32768);
     printf("TEA CBC en/decryption done. Find files in cbc folder.\n\n");
 
+    tea_ofb_mode(in_64);
+    tea_ofb_mode(in_512);
+    tea_ofb_mode(in_4096);
+    tea_ofb_mode(in_32768);
+    printf("TEA OFB en/decryption done. Find files in ofb folder.\n\n");
+
     return 0;
 }

@@ -129,8 +129,8 @@ void des_ofb(char *in) {
     output_4096((char*)out,'c','1');
     output_4096((char*)back,'p','1');
   } else if ((length-1)==32768) {
-    output_32768((char*)out,'c','0');
-    output_32768((char*)back,'p','0');
+    output_32768((char*)out,'c','1');
+    output_32768((char*)back,'p','1');
   }
 }
 
@@ -164,25 +164,25 @@ void tea_cbc_mode(char *in) {
       memcpy(cur_block,temp,8);
 
       int j;
-      for (j=0; j<8; j++) {
+      for (j=0; j<=8; j++) {
         cur_block[j] ^= ivec[j];
       }
      
       tea_encrypt((uint32_t*)cur_block,(uint32_t*)returned,(uint32_t*)key);
 
-      memcpy(ivec,returned,sizeof(returned));
-      memcpy(ctext,returned,sizeof(returned));
+      memcpy(ivec,returned,8);
+      memcpy(ctext,returned,8);
     } else {
         int pos=(i*8)+1; //set to start pos
         int itr = 0;
-        while (itr<8) {
+        while (itr<=8) {
           cur_block[itr] = temp[pos];
           pos++;
           itr++;
         }
 
         int j;
-        for (j=0; j<8; j++) {
+        for (j=0; j<=8; j++) {
           cur_block[j] ^= ivec[j];
          }
 
@@ -199,23 +199,27 @@ void tea_cbc_mode(char *in) {
     output_64(ctext,'c','2');
   } else if ((length-1)==512) {
     output_512(ctext,'c','2');
+  } else if ((length-1)==4096) {
+    output_4096(ctext,'c','2');
+  } else if ((length-1)==32768) {
+    output_32768(ctext,'c','2');
   }
 
-  memset(cur_block, 0 ,sizeof(cur_block));
-  memset(returned, 0 ,sizeof(returned));
-  memcpy(ivec, ivsetup, sizeof(ivsetup));
+  memset(cur_block, 0, 8);
+  memset(returned, 0, 8);
+  memcpy(ivec, ivsetup, 8);
 
   //decrypt
   gettimeofday(&start,NULL);
   for (i=0; i<rounds; i++) {
     if(i==0) {
-      memcpy(temp,ctext,strlen(ctext));
+      memcpy(temp,ctext,length);
       memcpy(cur_block,temp,8);
 
       tea_decrypt((uint32_t*)cur_block,(uint32_t*)returned,(uint32_t*)key);
 
       int h;
-      for (h=0; h<8; h++) {
+      for (h=0; h<=8; h++) {
         returned[h] ^= ivec[h];
       }
 
@@ -224,7 +228,7 @@ void tea_cbc_mode(char *in) {
     } else {
         int pos=(i*8)+1; //set to start pos
         int itr = 0;
-        while (itr<8) {
+        while (itr<=8) {
           cur_block[itr] = temp[pos];
           pos++;
           itr++;
@@ -233,7 +237,7 @@ void tea_cbc_mode(char *in) {
         tea_decrypt((uint32_t*)cur_block,(uint32_t*)returned,(uint32_t*)key);
 
         int h;
-        for(h=0; h<8; h++) {
+        for(h=0; h<=8; h++) {
           returned[h] ^= ivec[h];
         }
 
@@ -248,5 +252,133 @@ void tea_cbc_mode(char *in) {
     output_64(ptext,'p','2');
   } else if ((length-1)==512) {
     output_512(ptext,'p','2');
+  } else if ((length-1)==4096) {
+    output_4096(ptext, 'p', '2');
+  } else if ((length-1)==32768) {
+    output_32768(ptext, 'p', '2');
+  }
+}
+
+void tea_ofb_mode(char *in) {
+  int length = strlen(in)+1;
+  int rounds = length/8;
+  int i;
+  char key[16], nonceset[8], nonceec[8], cur_block[8], returned[8];
+  char ctext[length], ptext[length], temp[length];
+  struct timeval start;
+  struct timeval end;
+
+  memset(ctext, 0, sizeof(ctext));
+  memset(ptext, 0 ,sizeof(ptext));
+  memset(cur_block, 0 ,sizeof(cur_block));
+  memset(returned, 0 ,sizeof(returned));
+  memset(key, 0, sizeof(key));
+  memset(nonceset, 0, sizeof(nonceset));
+  memset(temp, 0, sizeof(temp));
+  memset(nonceec, 0, sizeof(nonceec));
+
+  memcpy(key,rand_stream(16),16);
+  memcpy(nonceset,rand_stream(8),8);
+  strcpy(temp,in);
+  memcpy(nonceec, nonceset, 8);
+
+  //encrypt
+  gettimeofday(&start,NULL);
+  for (i=0; i<rounds; i++) {
+    if(i==0) {
+      memcpy(cur_block,temp,8);
+     
+      tea_encrypt((uint32_t*)nonceec,(uint32_t*)returned,(uint32_t*)key);
+      memcpy(nonceec,returned,8);
+
+      int j;
+      for (j=0; j<=8; j++) {
+        cur_block[j] ^= returned[j];
+      }
+
+      memcpy(ctext,cur_block,8);
+    } else {
+      int pos=(i*8)+1; //set to start pos
+      int itr = 0;
+      while (itr<8) {
+        cur_block[itr] = temp[pos];
+        pos++;
+        itr++;
+      }
+
+      tea_encrypt((uint32_t*)nonceec,(uint32_t*)returned,(uint32_t*)key);
+      memcpy(nonceec,returned,8);
+
+      int j;
+      for (j=0; j<=8; j++) {
+        cur_block[j] ^= returned[j];
+       }
+
+      memcpy(ctext+(i*8),cur_block,8);
+    } //end if/else
+  }//end for i
+  gettimeofday(&end,NULL);
+  printf("%d TEA OFB encrypt took %li useconds.\n",length-1,(end.tv_usec-start.tv_usec));
+
+  if((length-1)==64) {
+    output_64(ctext,'c','3');
+  } else if ((length-1)==512) {
+    output_512(ctext,'c','3');
+  } else if ((length-1)==4096) {
+    output_4096(ctext,'c','3');
+  } else if ((length-1)==32768) {
+    output_32768(ctext,'c','3');
+  }
+
+  memset(cur_block, 0, 8);
+  memset(returned, 0, 8);
+  memcpy(nonceec, nonceset, 8);
+
+  //decrypt
+  gettimeofday(&start,NULL);
+  for (i=0; i<rounds; i++) {
+    if(i==0) {
+      memcpy(temp,ctext,length);
+      memcpy(cur_block,temp,8);
+
+      tea_encrypt((uint32_t*)nonceec,(uint32_t*)returned,(uint32_t*)key);
+      memcpy(nonceec,returned,8);
+
+      int h;
+      for (h=0; h<=8; h++) {
+        cur_block[h] ^= returned[h];
+      }
+      memcpy(ptext,cur_block,8);
+    } else {
+      int pos=(i*8)+1; //set to start pos
+      int itr = 0;
+      while (itr<8) {
+        cur_block[itr] = temp[pos];
+        pos++;
+        itr++;
+      }
+
+      tea_encrypt((uint32_t*)cur_block,(uint32_t*)returned,(uint32_t*)key);
+      memcpy(nonceec,returned,8);
+
+      int h;
+      for(h=0; h<=8; h++) {
+        cur_block[h] ^= returned[h];
+      }
+
+      memcpy(ptext+(i*8),cur_block,8);
+    } //end if/else
+  }//end for i
+  gettimeofday(&end,NULL);
+  printf("%d TEA OFB decrypt took %li useconds.\n",length-1,(end.tv_usec-start.tv_usec));
+
+  if((length-1)==64) {
+    output_64(ptext,'p','3');
+  } else if ((length-1)==512) {
+    output_512(ptext,'p','3');
+  } else if ((length-1)==4096) {
+    output_4096(ptext, 'p', '3');
+  } else if ((length-1)==32768) {
+    output_32768(ptext, 'p', '3');
   }
 }
