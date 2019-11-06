@@ -22,5 +22,3 @@ This program uses openssl 1.0.2. If you are using openssl 1.1.0 then change C_bl
 3. run ./prog
 4. output will go into CBC or OFB directory pending the method of encryption
 5. run make cleanobj to clean any output files should you wish to run the prog again without additional compilation
-###### current issues
-* only decrypts first 8 bytes of any self-implemented method for some reason
